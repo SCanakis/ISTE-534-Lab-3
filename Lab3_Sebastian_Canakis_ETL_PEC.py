@@ -326,7 +326,7 @@ def main():
 
     pec_bu, pec_ct, pec_c, pec_i, pec_m, pec_pt, pec_p = extract_PEC(PEC_dir=PEC_dir)
     tables = transform_PEC(pec_bu, pec_ct, pec_c, pec_i, pec_m, pec_pt, pec_p, engine)
-    load_PEC(tables, engine)
+    load_PEC(engine, tables)
 
 
 
