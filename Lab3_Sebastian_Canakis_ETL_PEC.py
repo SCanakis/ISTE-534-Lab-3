@@ -78,7 +78,7 @@ def transform_PEC(pec_bu, pec_ct, pec_c, pec_i, pec_m, pec_pt, pec_p, engine):
     #   pec_ct-> Customer type seems correct at a glance
     #   pec_c-> Customer has an issue with ",," at the end of it 
     customer = transform_pec_customer(pec_c=pec_c, pec_ct=pec_ct)
-    product = transform_pec_product(pec_p=pec_p, pec_bu=pec_bu, pec_pt=pec_pt)
+    product = transform_pec_product(pec_p=pec_p, pec_bu=pec_bu, pec_pt=pec_pt, pec_i=pec_i, pec_m=pec_m)
     invoices = clean_pec_invoices(pec_i=pec_i)
 
     customer = add_sk(customer, "customer_sk", next_sk(engine, "dim_customer", "customer_sk"))
@@ -276,7 +276,7 @@ def transform_pec_customer(pec_c, pec_ct):
         "source_system": "PEC",
     })
 
-def transform_pec_product(pec_p, pec_bu, pec_pt):
+def transform_pec_product(pec_p, pec_bu, pec_pt, pec_i, pec_m):
     p = pec_p.copy()
     pt = pec_pt.copy()
 
@@ -286,6 +286,9 @@ def transform_pec_product(pec_p, pec_bu, pec_pt):
     p = (p.merge(pt, left_on="productTypeID", right_on="PRODTYPEID", how="left")
           .merge(pec_bu, on="BUID", how="left"))
 
+    unit_cost = p["unitCost"].astype(float).fillna(p["prodid"].map(pec_unit_costs(pec_i, pec_m)))
+
+
     return pd.DataFrame({
         "product_nk": p["prodid"].astype(int),
         "product_description": p["prodDescription"],
@@ -294,12 +297,34 @@ def transform_pec_product(pec_p, pec_bu, pec_pt):
         "product_unit_cost": p["unitCost"].astype(float),
         "prod_type_id": p["productTypeID"],
         "type_description": p["TYPEDESCRIPTION"],
+        "product_unit_cost": unit_cost,
         "bu_id": p["BUID"],
         "bu_name": p["NAME"],
         "bu_abbrev": p["ABBREV"],
         "source_system": "PEC",
     })
 
+
+def pec_unit_costs(pec_i, pec_m):
+    pec_i = pec_i.copy()
+    pec_m = pec_m.copy()
+
+    # 1: give both tables a month column
+    pec_i["month"] = pd.to_datetime(pec_i["salesDate"], format="%m/%d/%y", errors="coerce").dt.strftime("%Y-%m")
+    pec_m["month"] = "20" + pec_m["Year"].str.zfill(2) + "-" + pec_m["Month"].str.zfill(2)
+
+    # 2: how many of each product were sold each month
+    pec_i["qty"] = pd.to_numeric(pec_i["qty"], errors="coerce")
+    sold = pec_i.groupby(["prodid", "month"], as_index=False)["qty"].sum()
+
+    # 3: put each month's cost next to that month's quantity
+    table = pec_m.merge(sold, left_on=["prodID", "month"], right_on=["prodid", "month"])
+
+    # 4: unit cost = cost / quantity
+    table["unit_cost"] = table["manufacturingCost"].astype(float) / table["qty"]
+
+    # 5: one number per product 
+    return table.groupby("prodID")["unit_cost"].median().round(2)
     
 
 def load_PEC(engine, tables):
