@@ -279,8 +279,7 @@ def main():
     load_dotenv()
     password = os.getenv("PASSWORD")
     engine = create_engine(f"mysql+pymysql://root:{password}@localhost/{SCHEMA}?charset=utf8mb4")
-    # engine = create_engine(f"mysql+pymysql://aa-coco:{password}@localhost/{SCHEMA}?charset=utf8mb4")  # use this if aa-coco has been granted access
-
+    
     tpcw_bu, tpcw_ct, tpcw_c, tpcw_pt, tpcw_i, tpcw_p = extract_tpcw(TPCW_DIR)
 
     dim_customer = transform_tpcw_customer(tpcw_c, tpcw_ct)
