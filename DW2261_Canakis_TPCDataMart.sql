@@ -137,5 +137,5 @@ CREATE TABLE IF NOT EXISTS iste534.fact_sales(
     CONSTRAINT junk_constraint
         FOREIGN KEY (junk_fk) REFERENCES iste534.dim_junk(junk_sk),
     CONSTRAINT primary_key_constraint
-        PRIMARY KEY (order_time_fk, sale_time_fk, supplier_fk, customer_fk, product_fk, junk_fk)
+        PRIMARY KEY (order_time_fk, sale_time_fk, supplier_fk, customer_fk, product_fk, junk_fk, invoice_nk)
 );
