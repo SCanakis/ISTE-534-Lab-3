@@ -1,7 +1,7 @@
 /*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19  Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: iste534
+-- Host: localhost    Database: oltp
 -- ------------------------------------------------------
 -- Server version	10.11.14-MariaDB-0ubuntu0.24.04.1
 
@@ -17,12 +17,12 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Current Database: `iste534`
+-- Current Database: `oltp`
 --
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `iste534` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `oltp` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
 
-USE `iste534`;
+USE `oltp`;
 
 --
 -- Table structure for table `business_unit`
@@ -115561,7 +115561,7 @@ INSERT INTO `supplier` VALUES
 UNLOCK TABLES;
 
 --
--- Dumping routines for database 'iste534'
+-- Dumping routines for database 'oltp'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
