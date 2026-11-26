@@ -346,6 +346,7 @@ def main():
     load_dotenv()
     password = os.getenv("PASSWORD")
     engine = create_engine(f"mysql+pymysql://root:{password}@localhost/{SCHEMA}?charset=utf8mb4")
+    # engine = create_engine(f"mysql+pymysql://aa-coco:{password}@localhost/{SCHEMA}?charset=utf8mb4")
 
     PEC_dir = "Lab3_DataFiles/PEC"
 

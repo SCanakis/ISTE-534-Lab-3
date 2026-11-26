@@ -62,6 +62,7 @@ def connect():
     load_dotenv()
     password = os.getenv("PASSWORD")
     return create_engine(f"mysql+pymysql://root:{password}@localhost/{SOURCE_SCHEMA}?charset=utf8mb4")
+    # return create_engine(f"mysql+pymysql://aa-coco:{password}@localhost/{SOURCE_SCHEMA}?charset=utf8mb4")
 
 
 def main():
@@ -141,11 +142,11 @@ def build_fact(sales, customers, products, suppliers):
     product_key = dict(zip(products["product_nk"], products["product_sk"]))
     supplier_key = dict(zip(suppliers["supplier_nk"], suppliers["supplier_sk"]))
 
-    sale_date = pd.to_datetime(sales["sales_date"])
+    sale_sk = pd.to_datetime(sales["sales_date"]).dt.strftime("%Y%m%d").astype(int)
 
     fact = pd.DataFrame({
-        "order_time_fk": -1,
-        "sale_time_fk": sale_date.dt.strftime("%Y%m%d").astype(int),
+        "order_time_fk": sale_sk,   # TPC-E has no order date, so we reuse the sale date
+        "sale_time_fk": sale_sk,
         "supplier_fk": sales["supplier_id"].map(supplier_key),
         "customer_fk": sales["customer_id"].map(customer_key),
         "product_fk": sales["prod_id"].map(product_key),
@@ -159,6 +160,24 @@ def build_fact(sales, customers, products, suppliers):
         "fulfill_time": None,
     })
     fact["gross_profit"] = (fact["fact_sales_amount"] - fact["fact_cost"]).round(2)
+
+    # The PK is (order_time_fk, sale_time_fk, supplier_fk, customer_fk, product_fk, junk_fk).
+    # Multiple invoice lines can share the same PK combination, so we aggregate them.
+    pk_cols = ["order_time_fk", "sale_time_fk", "supplier_fk", "customer_fk", "product_fk", "junk_fk"]
+    agg_cols = {
+        "invoice_nk": "first",
+        "source_system": "first",
+        "fact_sales_amount": "sum",
+        "fact_num_products": "sum",
+        "fact_cost": "sum",
+        "shipping_cost": "first",
+        "fulfill_time": "first",
+        "gross_profit": "sum",
+    }
+    fact = fact.groupby(pk_cols, as_index=False).agg(agg_cols)
+    for col in ["fact_sales_amount", "fact_cost", "gross_profit"]:
+        fact[col] = fact[col].round(2)
+
     return fact
 
 

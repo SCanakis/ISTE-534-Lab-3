@@ -29,7 +29,7 @@ SELECT st.year, st.quarter, c.customer_type_name,
        SUM(f.fact_cost)         AS cost,
        SUM(f.gross_profit)      AS gross_profit
 FROM iste534.fact_sales f
-JOIN iste534.sale_time st   ON f.sale_time_fk = st.time_sk
+JOIN iste534.dim_time st   ON f.sale_time_fk = st.time_sk
 JOIN iste534.dim_customer c ON f.customer_fk  = c.customer_sk
 GROUP BY st.year, st.quarter, c.customer_type_name
 ORDER BY st.year, st.quarter, c.customer_type_name;
